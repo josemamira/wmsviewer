@@ -1,0 +1,480 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"> 
+<head> 
+<meta http-equiv="content-type" content="text/html;charset=utf-8" /> 
+<title>Servicios de mapa - WMS (Web Map Service)</title>
+
+ <LINK rel="stylesheet" type="text/css" href="./style.css">
+<STYLE>
+#miBoxMini {
+border: solid;
+border-color: #FADEA5;
+border-width: 1px;
+margin-left:0px;
+margin-right:0px;
+margin-top: 0px;
+margin-bottom: 0px;
+background-color:#FAFBCF;
+}
+</STYLE>
+<script type="text/javascript" src="lib/proj4js-compressed.js"></script> 
+<script type="text/javascript" src="http://dev.openlayers.org/OpenLayers.js"></script> 
+<style type="text/css"> 
+#map {
+    width: 400px;
+    height: 300px;
+    border: 1px solid black;
+}
+div.olControlPanel {
+    top: 0px;
+    left: 50px;
+    position: absolute;
+}
+.olControlPanel div {
+    display: block;
+    width:  22px;
+    height: 22px;
+    border: thin solid black;
+    margin-top: 10px;
+    background-color: white
+}
+.helpButtonItemInactive {
+    background-image: url("help.png");
+}
+.olControlMousePosition {
+    position: absolute;
+    right: 10px;
+    top: 0px;
+    height: 15px;
+    font-size: 8pt;
+    background-color: white
+}
+#utm_mouse {
+    top: 15px;
+}
+</style> 
+<script type="text/javascript"> 
+
+// Funciones para ocultar mostrar mapa o formulario
+function toggleMap() {
+	var ele = document.getElementById("mapa");
+	var text = document.getElementById("displayText");
+	if(ele.style.display == "block") {
+    		ele.style.display = "none";
+		text.innerHTML = "<h3>mostrar mapa</h3>";
+  	}
+	else {
+		ele.style.display = "block";
+		text.innerHTML = "<h3>ocultar mapa</h3>";
+	}
+} 
+
+function toggleForm() {
+	var ele = document.getElementById("form");
+	var text = document.getElementById("displayText2");
+	if(ele.style.display == "block") {
+    		ele.style.display = "none";
+		text.innerHTML = "<h3>mostrar formulario WMS</h3>";
+  	}
+	else {
+		ele.style.display = "block";
+		text.innerHTML = "<h3>ocultar formulario WMS</h3>";
+	}
+} 
+
+
+
+var map;
+function init() {
+        Proj4js.defs["EPSG:25830"] = "+proj=utm +zone=30 +ellps=GRS80 +units=m +no_defs";
+   
+            var options = { controls: [
+            new OpenLayers.Control.Navigation(),
+            new OpenLayers.Control.KeyboardDefaults(),
+            new OpenLayers.Control.PanZoomBar(),
+            new OpenLayers.Control.Scale(),
+            new OpenLayers.Control.Attribution(),
+            new OpenLayers.Control.LayerSwitcher( {title: 'Switch/add/remove layers'} )
+        ]};
+        map = new OpenLayers.Map('map', options);
+        map.projection = "EPSG:25830";
+        map.displayProjection = new OpenLayers.Projection("EPSG:4326");
+        map.maxExtent = new OpenLayers.Bounds(-100000, 3950000, 1150000, 4900000);
+        map.resolutions = [3600,1800,900,450,225,120,50,25,10,4.5,3,2,1,0.5,0.25,0.125];
+        map.tileSize = new OpenLayers.Size(200, 200);
+        // layers
+
+        var bcn500 = new OpenLayers.Layer.WMS( "BCN500",
+            "http://aulageomatica.ua.es:8080/cgi-bin/mapserv?map=/opt/scribeui/workspaces/jose/BCN500/map/BCN500.map", {layers: 'default'}, {'buffer': 0} );
+        map.addLayer(bcn500);
+        bcn500.attribution = 'Mapa base con datos de la <a target="_blank" href="https://github.com/josemamira/BCN500">BCN500</a>';
+
+        var ign = new OpenLayers.Layer.WMS( "IGN base",
+            "http://www.ign.es/wms-inspire/ign-base", {layers: 'IGNBaseTodo'}, {'buffer': 0} );
+        map.addLayer(ign);
+        ign.attribution = 'Mapa base del IGN para  <a target="_blank" href="http://www.idee.es/">IDEE</a>';
+
+
+
+        
+        var pnoa = new OpenLayers.Layer.WMS( "PNOA aerial/topo",
+            "http://www.idee.es/wms/PNOA/PNOA", {layers: 'pnoa'}, {'buffer': 0} );
+        map.addLayer(pnoa);        
+        pnoa.attribution = 'ortofotos del PNOA en <a target="_blank" href="http://www.idee.es/">IDEE</a>';
+        
+        var catastro = new OpenLayers.Layer.WMS( "Catastro",
+            "http://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx", {layers: 'catastro'}, {'buffer': 0} );
+        map.addLayer(catastro);        
+        catastro.attribution = 'Cartografia catastral de <a target="_blank" href="http://www.catastro.meh.es/">Catastro</a>';
+        
+  
+       var siose = new OpenLayers.Layer.WMS( "SIOSE",
+            "http://servicios.idee.es/wms-inspire/ocupacion-suelo", {layers: 'LU.ExistingLandUse'}, {'buffer': 0} );
+        map.addLayer(siose);        
+        siose.attribution = 'Ocupación de usos del programa <a target="_blank" href="http://www.ign.es/ign/layoutIn/corineLandCover.do">Corine</a>';
+        
+      
+         
+        var sigua = new OpenLayers.Layer.MapServer( "SIGUA Tematico", 
+                "http://www.sigua.ua.es/cgi-bin/siguawms",
+                {
+					  //map: '/var/datos/html/carto/map/sigua_sigpac.map',
+                 layers: 'Base', 
+                 format: 'png', 
+                 //transparent: 'true'
+                });
+          sigua.attribution = 'GIS de la UA para IDEs';
+          map.addLayer(sigua);
+
+
+        var panel = new OpenLayers.Control.Panel();
+        panel.addControls([
+            new OpenLayers.Control.Button({
+                displayClass: "helpButton", trigger: function() {alert('Utilidad para ver la BBOX en varias proyecciones')}, title: 'Help'
+            })
+        ]);
+        map.addControl(panel);
+        map.addControl(new OpenLayers.Control.MousePosition( {id: "ll_mouse", formatOutput: formatLonlats} ));
+        map.addControl(new OpenLayers.Control.MousePosition( {id: "utm_mouse", prefix: "UTM ", displayProjection: map.baseLayer.projection, numDigits: 0} ));
+        var lonlat = new OpenLayers.LonLat(-3.69, 40.41);
+        lonlat.transform(map.displayProjection, map.baseLayer.projection);
+        map.setCenter(lonlat, 0);
+        // Mouse position in pixels
+        map.events.register("mousemove", map, function(e) { 
+        	var position = this.events.getMousePosition(e);
+         OpenLayers.Util.getElement("coords").innerHTML = "<h6>"+position+"</h6>";
+        });
+ }
+ 
+ 
+        function formatLonlats(lonLat) {
+            var lat = lonLat.lat;
+            var long = lonLat.lon;
+            var ns = OpenLayers.Util.getFormattedLonLat(lat);
+            var ew = OpenLayers.Util.getFormattedLonLat(long,'lon');
+            return ns + ', ' + ew + ' (' + (Math.round(lat * 10000) / 10000) + ', ' + (Math.round(long * 10000) / 10000) + ')';
+        }
+       function getextent4326() {
+		   
+         document.getElementById('bbox').value = "";
+		 var extent = map.getExtent().transform(map.baseLayer.projection,map.displayProjection);
+         var str = extent.left + "," + extent.bottom + ","+extent.right+","+ extent.top ;
+         document.getElementById('bbox').value = str;
+         }
+    
+        function getextent900913() {
+         document.getElementById('bbox').value = "";
+		 var extent = map.getExtent().transform(new OpenLayers.Projection("EPSG:900913"),map.getProjectionObject() );
+         var str = extent.left + "," + extent.bottom + ","+extent.right+","+ extent.top ;
+         document.getElementById('bbox').value = str;
+        }
+        function getextent25830() {
+			 document.getElementById('bbox').value = "";
+		     var extent = map.getExtent();
+             var str = extent.left + "," + extent.bottom + ","+extent.right+","+ extent.top ;
+			 document.getElementById('bbox').value = str;			
+         }  
+  
+// FORMULARIO
+function rellenaResource() {
+	var OnlineResource=document.getElementById("OnlineResource");
+	var OnlineResourceValue= OnlineResource.options[OnlineResource.selectedIndex].value;
+	document.getElementById('OnlineResourceText').value = OnlineResourceValue;
+}
+function changeText(){
+	var operador;
+	var url = "";
+	var OnlineResourceValue=""
+	var OnlineResourceText = document.getElementById('OnlineResourceText').value;
+	var OnlineResource=document.getElementById("OnlineResource");
+	// o el combo o la caja de texto
+    if (OnlineResourceText == "") {
+		var OnlineResourceValue= OnlineResource.options[OnlineResource.selectedIndex].value;
+	} else {
+		var OnlineResourceValue=OnlineResourceText;
+		// Si termina en ".map" de mapserver
+		if (OnlineResourceValue.slice(-4) == ".map") {
+			operador = "&";
+		} else { operador = "?";}
+    }
+    var service = "&service="+ document.getElementById('service').value;
+	var request=document.getElementById("request");
+	var requestValue= request.options[request.selectedIndex].value;
+	var version = "&version="+ document.getElementById('version').value;
+	var srs=document.getElementById("srs");
+	var srsValue= "&srs="+srs.options[srs.selectedIndex].value;	
+	var layers = "&layers=" + document.getElementById('layers').value;
+    var bbox = "&bbox=" + document.getElementById('bbox').value;
+    var height= "&height=" + document.getElementById('height').value;
+    var width= "&width=" + document.getElementById('width').value;
+    var format=document.getElementById('format');
+ 	var formatValue= "&format="+format.options[format.selectedIndex].value;	 
+ 	
+ 	if (document.getElementById('sldCheck').checked) {
+		var sldText = "&sld=" + document.getElementById('sld').value;
+    } else { sldText="";}  
+ 	
+    // valores obligatorios para getfeatureinfo    
+    var query_layers = "&query_layers=" + document.getElementById('query_layers').value;     
+    var layersInfo = "&layers=" + document.getElementById('layersInfo').value;   
+    var imgx = "&x=" + document.getElementById('imgx').value;
+    var imgy = "&y=" + document.getElementById('imgy').value;
+ 	var info_format = document.getElementById('info_format');
+	var info_formatValue = "&info_format="+info_format.options[info_format.selectedIndex].value;
+	
+	//valores obligatorios para getLegendGraphic 	
+    var layerLey = "&layer=" + document.getElementById('layerLey').value;
+    var formatLey =  document.getElementById("formatLey");
+    var formatLeyValue= "&format="+formatLey.options[formatLey.selectedIndex].value;
+    
+        
+	if (requestValue == "getcapabilities") {
+		url= OnlineResourceValue+operador+"request="+requestValue+service+version;
+		document.getElementById('urlText').innerHTML = "<a href='"+ url + "' target='_blank'>"+ url + "</a>";
+	} else if (requestValue == "getmap") {
+		url= document.getElementById('urlText').innerHTML = OnlineResourceValue+operador+"request="+requestValue+service+version+srsValue+layers+bbox+height+width+formatValue+sldText;
+		document.getElementById('urlText').innerHTML = "<a href='"+ url + "' target='_blank'>"+ url + "</a>";
+	} else if (requestValue == "getlegendgraphic") {
+		url= OnlineResourceValue+operador+"request="+requestValue+service+version+layerLey+formatLeyValue;
+		document.getElementById('urlText').innerHTML = "<a href='"+ url + "' target='_blank'>"+ url + "</a>";
+    } else if (requestValue == "getfeatureinfo") {
+		url= document.getElementById('urlText').innerHTML = OnlineResourceValue+operador+"request="+requestValue+service+version+srsValue+query_layers+bbox+height+width+formatValue+layersInfo+imgx+imgy+info_formatValue;
+		//url= document.getElementById('urlText').innerHTML = OnlineResourceValue+operador+"request="+requestValue+service+version+srsValue+query_layers+bbox+height+width+formatValue+layersInfo+imgx+imgy+info_format+info_formatValue;
+		document.getElementById('urlText').innerHTML = "<a href='"+ url + "' target='_blank'>"+ url + "</a>";
+	} else {
+		url= document.getElementById('urlText').innerHTML = OnlineResourceValue+operador+"request="+requestValue+service+version+srsValue+layers+bbox+height+width+formatValue;
+		document.getElementById('urlText').innerHTML = "<a href='"+ url + "' target='_blank'>"+ url + "</a>";
+	}
+}
+
+function rellenaHeight() {
+   var widthN= document.getElementById('width').value;
+   var alto = widthN*0.75;
+   document.getElementById('height').value = alto;
+   // Centro imagen
+   document.getElementById('imgx').value = widthN/2;
+   document.getElementById('imgy').value = alto/2;
+   
+}
+
+function listLayers() {
+	var proxyCors="https://cors-anywhere.herokuapp.com/";
+	var format = new OpenLayers.Format.WMSCapabilities({
+        version: "1.3.0"
+    });
+ 
+    OpenLayers.Request.GET({
+        url: proxyCors+document.getElementById('OnlineResourceText').value,
+        params: {
+            SERVICE: "WMS",
+            VERSION: "1.3.0",
+            REQUEST: "GetCapabilities"
+        },
+        success: function(request) {
+            //Creamos una variable para recoger la respuesta
+            var doc = request.responseXML;
+            //Nos protegemos de las excepciones
+            if (!doc || !doc.documentElement) {
+                doc = request.responseText;
+            }
+            //Leemos la respuesta
+            var capabilities = format.read(doc);   
+            //Parseamos las capas y las metemos en una matriz      
+            var layers = capabilities.capability.layers;
+            //Esta variable recogerá nuestras capas
+            layersStr = "";
+            //Por cada posición en la matriz añadimos una capa al texto
+            for(var i=0; i<layers.length; i++) {
+                if(layers[i].name && layers[i].name!="") {
+                        //Si hay nombre se añade una capa más
+                    //layersStr = layersStr + layers[i].name + "," + layers[i].title + "<br>";
+                    
+                    layersStr = layersStr + '<input type="checkbox" id="capas" value="'+layers[i].name+'"> <label for="capas">'+'<strong>['+layers[i].name+']</strong> '+layers[i].title+'</label><br>';
+                }
+            }
+            //Mostramos todas las capas separadas por comas
+            //document.write(layersStr);
+            document.getElementById('capasCheck').innerHTML = layersStr;
+            //alert(layersStr);
+        }
+    });		
+}    
+
+    function addLayers() {
+		
+		
+		divCont = document.getElementById('capasCheck'); 
+		checks  = divCont.getElementsByTagName('input');
+		layersSel = "";
+		for(i=0;i<checks.length; i++){
+			if(checks[i].checked == true){
+				//alert('este es: ' + checks[i].value);
+				layersSel = layersSel + checks[i].value+',';
+				//document.getElementById('capasSel').innerHTML = checks[i].value;
+			}
+		}
+		document.getElementById('capasSel').value = layersSel.slice(0, -1);	
+		document.getElementById('layers').value = layersSel.slice(0, -1);
+		document.getElementById('query_layers').value = layersSel.slice(0, -1);
+		document.getElementById('layersInfo').value = layersSel.slice(0, -1);	
+		
+
+	}
+
+
+</script> 
+</head> 
+<body onload="init()"> 
+<!-- <a id="displayText" href="javascript:toggleMap();"><h3>mostrar mapa</h3></a>
+<div id="mapa" style="display: none"> -->
+<!-- inicio del html del mapa -->
+<table>
+<tr>
+<td><div id="map"></div> </td>
+<td>
+	<a href="./ogc_wms_23030.html">[WMS ED50]</a> <a href="./ogc_wfs.html">[WFS]</a> <a href="./ogc_wcs.html">[WCS]</a><br/>
+        <input type="button" value="ver coordenadas geográficas WGS 84" onclick="getextent4326();" /><br /> 
+        <input type="button" value="ver coordenadas proyectadas Google Mercator" onclick="getextent900913();" /><br /> 
+        <input type="button" value="ver coordenadas UTM ETRS89" onclick="getextent25830();" /><br />
+        
+        <TABLE WIDTH=182 BORDER=0 CELLPADDING=4 CELLSPACING=0><COL WIDTH=43><COL WIDTH=38><COL WIDTH=26><COL WIDTH=41><TR VALIGN=TOP><TD WIDTH=43><P>Ymax</P></TD><td width="121" colspan="3" rowspan="3" align="center" valign="middle" bgcolor="#FFA500" style="border-color: #ffffff; border-width: 5px;">&nbsp;mapa</TD></TR><TR VALIGN=TOP><TD WIDTH=43><P><BR></P></TD></TR><TR VALIGN=TOP><TD WIDTH=43><P>Ymin</P></TD></TR><TR VALIGN=TOP><TD WIDTH=43><P><BR></P></TD><TD WIDTH=38><P>Xmin</P></TD><TD WIDTH=26><P><BR></P></TD><TD WIDTH=41><P>Xmax</P></TD></TR></TABLE>
+</td>
+</tr>
+<tr>
+<td colspan=2>   <div id="coords"></div> </td>
+</tr>
+</table>
+
+<!-- </div> -->
+<!-- fin del html del mapa -->
+
+
+
+ <a id="displayText2" href="javascript:toggleForm();"><h3>mostrar formulario WMS</h3></a>
+<div id="form" style="display: none"> 
+<!-- inicio del html del formulario -->
+<hr>
+<b>Común a todos</b><br/>
+Servicio (service): <input type="text" name="service" id="service" size="3" value="WMS" /><br/>
+<div id="miBoxMini">
+Listado de recursos WMS (onlineResource). Selecciona un servicio del desplegable o escribe en la caja de abajo:  
+<select name="OnlineResource" id="OnlineResource" onChange='rellenaResource()'>
+   <option value="0" >(Selecciona un recurso)</option>
+   <option value="http://www.sigua.ua.es/cgi-bin/siguawms" >SIGUA</option>
+   <option value="http://www.idee.es/wms/PNOA/PNOA" >PNOA</option>
+   <option value="http://www.ign.es/wms-inspire/ign-base" >IDEE Base</option>
+   <option value="http://servicios.idee.es/wms-inspire/ocupacion-suelo" >SIOSE</option>
+   <option value="http://servicios.idee.es/wms-inspire/transportes" >Red de transporte</option>
+   <option value="http://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx" >Catastro</option>
+   <option value="http://aulageomatica.ua.es:8080/cgi-bin/mapserv?map=/opt/scribeui/workspaces/jose/BCN500/map/BCN500.map" >BCN500</option>
+   
+
+   
+
+</select><br/>
+OnlineResource: <input type="text" name="OnlineResourceText" id="OnlineResourceText" size="100" value="" />Ej.: http://www.sigua.ua.es/cgi-bin/siguawms</div>
+Requerimiento (Request):  
+<select name="request" id="request">
+   <option value="getcapabilities" >GETCAPABILITIES - contrato</option>
+   <option value="getmap" selected>GETMAP - obtener imagen</option> 
+   <option value="getlegendgraphic">GETLEGENDGRAPHIC - ver leyenda</option>
+   <option value="getfeatureinfo">GETFEATUREINFO - información</option>
+</select>
+Versión servicio WMS (version) <input type="text" name="version" id="version" size="3" value="1.1.1" /><br/>
+<hr/>
+<b>Obligatorio para GetCapabilities:</b><br>
+ninguno
+<hr/>
+<b>Obligatorio para GetMap:</b><br>
+		<div id="capasCheck"></div><br>
+		<input type="text" id="capasSel" name="capasSel"><label for "capasSel">Capas seleccionadas</label><br>
+		<input type="button" name="Submit" value="Ver capas" onClick="listLayers();"><br>
+		<input type="button" name="Submit" value="Add capas" onClick="addLayers();"><br>
+Referencia espacial (srs): 
+<select name="srs" id="srs">
+   <option value="EPSG:23029">UTM ED50 HUSO 29</option>
+   <option value="EPSG:23030" selected>UTM ED50 HUSO 30</option> 
+   <option value="EPSG:23031">UTM ED50 HUSO 31</option>
+   <option value="EPSG:25829">UTM ETRS89 HUSO 29</option>
+   <option value="EPSG:25830">UTM ETRS89 HUSO 30</option> 
+   <option value="EPSG:25831">UTM ETRS89 HUSO 31</option>
+   <option value="EPSG:4326">GEOGRAFICA WGS84</option> 
+   <option value="EPSG:900913">GOOGLE MERCATOR</option>
+</select><br/>
+Capas (layers) <input type="text" name="layers"  id="layers" value="Fotografia,Edificios" /><br/>
+Límites espaciales (bbox): <input type="text" name="bbox"  id="bbox" size="80" value="" /><br/>
+Ancho (width) <input type="text" name="width"  id="width" value="600" /><br/>
+Alto (height) <input type="text" name="height"  id="height" />
+<input type='button' onclick='rellenaHeight()' value='Calcula ancho'/>
+<br/>
+
+<!-- Ancho (width) <input type="text" name="width"  id="width" value="400" /><br/>
+ onChange='rellenaResource()' -->
+Formato imagen (format):
+<select name="format" id="format">
+   <option value="image/png">PNG</option>
+   <option value="image/gif">GIF</option>
+   <option value="image/jpeg">JPEG</option>
+ </select><br/>
+ Opcional para GetMap :<br/>
+ <input type="checkbox" name="sldCheck" id="sldCheck"/>Estilo (SLD): <input type="text" name="sld"  id="sld" size="50" value="http://www.sigua.ua.es/carto/map/sld/planta2.xml" /><br/>
+
+ <hr/>
+ <b>Obligatorio para GetFeatureInfo:</b>
+ <i>Además de srs,bbox,width,height</i><br/>
+ Capas a consultar (query_layers): <input type="text" name="query_layers"  id="query_layers" value="PB,P1" /><br/>
+ Capas a visualizar (layer): <input type="text" name="layersInfo"  id="layersInfo" value="Edificios,PB" /><br/>
+ Formato de salida (info_format): <select name="info_format" id="info_format">
+   <option value="text/plain">Texto plano</option>
+   <option value="gml">Documento GML</option>
+   <option value="text/html">Documento HTML</option>
+ </select><br/> 
+ Coordenada X en píxeles de la imagen (x): <input type="text" name="imgx"  id="imgx" size="2" value="156" /><br/>
+ Coordenada Y en píxeles de la imagen (y): <input type="text" name="imgy"  id="imgy" size="2" value="190" /><br/>
+ <hr/>
+ <b>Obligatorio para GetLegendGraphic:</b><br/>
+ Capa para ver leyenda (layer): <input type="text" name="layerLey"  id="layerLey" size="2" value="PB" /><br/>
+ Formato de la imagen (format): 
+ <select name="formatLey" id="formatLey">
+   <option value="image/png">PNG</option>
+   <option value="image/gif">GIF</option>
+   <option value="image/jpeg">JPEG</option>
+ </select><br/>
+  
+
+
+
+
+ <hr/>
+<input type='button' onclick='changeText()' value='Formar URL OGC'/>
+
+<div id="miBoxBasico">
+<h5 id='urlText'></h5>
+</div>
+ 
+<div id="ogc"></div>
+<!-- fin del html del formulario -->
+
+</div>
+
+</body> 
+</html> 
