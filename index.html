@@ -20,8 +20,8 @@ background-color:#FAFBCF;
 <script type="text/javascript" src="lib/ol/OpenLayers.js"></script> 
 <style type="text/css"> 
 #map {
-    width: 400px;
-    height: 300px;
+    width: 600px;
+    height: 450px;
     border: 1px solid black;
 }
 div.olControlPanel {
@@ -248,15 +248,43 @@ function changeText(){
     
         
 	if (requestValue == "getcapabilities") {
+		// errores
+		if (document.getElementById('OnlineResourceText').value === '' ) { alert('No hay RECURSO'); }
 		url= OnlineResourceValue+operador+"request="+requestValue+service+version;
 		document.getElementById('urlText').innerHTML = "<a href='"+ url + "' target='_blank'>"+ url + "</a>";
 	} else if (requestValue == "getmap") {
+		// errores
+		if (document.getElementById('OnlineResourceText').value === '' ) { alert('No hay RECURSO'); }
+		if (document.getElementById('bbox').value === '' ) { alert('No hay caja espacial (BBOX)'); }
+		if (document.getElementById('layers').value === '' ) { alert('No hay capas (LAYERS)'); }
+		if (document.getElementById('height').value === '' ) { alert('No hay alto de imagen (HEIGHT). Calcúla alto'); }
+	
 		url= document.getElementById('urlText').innerHTML = OnlineResourceValue+operador+"request="+requestValue+service+version+srsValue+layers+bbox+height+width+formatValue+sldText;
 		document.getElementById('urlText').innerHTML = "<a href='"+ url + "' target='_blank'>"+ url + "</a>";
 	} else if (requestValue == "getlegendgraphic") {
+		
+/*
+GetCapabilitiesUrl
+http://aulageomatica.ua.es:8080/cgi-bin/mapserv?map=/opt/scribeui/workspaces/jose/BCN500/map/BCN500.map&
+GetMapUrl
+http://aulageomatica.ua.es:8080/cgi-bin/mapserv?map=/opt/scribeui/workspaces/jose/BCN500/map/BCN500.map&
+GetFeatureInfoUrl
+http://aulageomatica.ua.es:8080/cgi-bin/mapserv?map=/opt/scribeui/workspaces/jose/BCN500/map/BCN500.map&
+GetLegendGraphic
+http://aulageomatica.ua.es:8080/cgi-bin/mapserv?map=/opt/scribeui/workspaces/jose/BCN500/map/BCN500.map&version=1.3.0&service=WMS&request=GetLegendGraphic&sld_version=1.1.0&layer=VIAS_PPAL&format=image/png&STYLE=default&
+*/		
+		
+		
+		
 		url= OnlineResourceValue+operador+"request="+requestValue+service+version+layerLey+formatLeyValue;
 		document.getElementById('urlText').innerHTML = "<a href='"+ url + "' target='_blank'>"+ url + "</a>";
     } else if (requestValue == "getfeatureinfo") {
+		// errores
+		if (document.getElementById('OnlineResourceText').value === '' ) { alert('No hay RECURSO'); }
+		if (document.getElementById('bbox').value === '' ) { alert('No hay caja espacial (BBOX)'); }
+		if (document.getElementById('layers').value === '' ) { alert('No hay capas (LAYERS)'); }
+		if (document.getElementById('height').value === '' ) { alert('No hay alto de imagen (HEIGHT). Calcúla alto'); }
+				
 		url= document.getElementById('urlText').innerHTML = OnlineResourceValue+operador+"request="+requestValue+service+version+srsValue+query_layers+bbox+height+width+formatValue+layersInfo+imgx+imgy+info_formatValue;
 		//url= document.getElementById('urlText').innerHTML = OnlineResourceValue+operador+"request="+requestValue+service+version+srsValue+query_layers+bbox+height+width+formatValue+layersInfo+imgx+imgy+info_format+info_formatValue;
 		document.getElementById('urlText').innerHTML = "<a href='"+ url + "' target='_blank'>"+ url + "</a>";
@@ -277,6 +305,9 @@ function rellenaHeight() {
 }
 
 function listLayers() {
+	if (document.getElementById('OnlineResourceText').value === ''){
+      alert('No hay ningún recurso WMS en la caja de texto. Escribe uno, o selecciona uno de la lista');
+    }
 	var proxyCors="https://cors-anywhere.herokuapp.com/";
 	var format = new OpenLayers.Format.WMSCapabilities({
         version: "1.3.0"
@@ -335,7 +366,9 @@ function listLayers() {
 		document.getElementById('capasSel').value = layersSel.slice(0, -1);	
 		document.getElementById('layers').value = layersSel.slice(0, -1);
 		document.getElementById('query_layers').value = layersSel.slice(0, -1);
-		document.getElementById('layersInfo').value = layersSel.slice(0, -1);	
+		document.getElementById('layersInfo').value = layersSel.slice(0, -1);
+		document.getElementById('layerLey').value = layersSel.slice(0, -1);	
+		
 		
 
 	}
@@ -351,10 +384,7 @@ function listLayers() {
 <tr>
 <td><div id="map"></div> </td>
 <td>
-	<a href="./ogc_wms_23030.html">[WMS ED50]</a> <a href="./ogc_wfs.html">[WFS]</a> <a href="./ogc_wcs.html">[WCS]</a><br/>
-        <input type="button" value="ver coordenadas geográficas WGS 84" onclick="getextent4326();" /><br /> 
-        <input type="button" value="ver coordenadas proyectadas Google Mercator" onclick="getextent900913();" /><br /> 
-        <input type="button" value="ver coordenadas UTM ETRS89" onclick="getextent25830();" /><br />
+
         
         <TABLE WIDTH=182 BORDER=0 CELLPADDING=4 CELLSPACING=0><COL WIDTH=43><COL WIDTH=38><COL WIDTH=26><COL WIDTH=41><TR VALIGN=TOP><TD WIDTH=43><P>Ymax</P></TD><td width="121" colspan="3" rowspan="3" align="center" valign="middle" bgcolor="#FFA500" style="border-color: #ffffff; border-width: 5px;">&nbsp;mapa</TD></TR><TR VALIGN=TOP><TD WIDTH=43><P><BR></P></TD></TR><TR VALIGN=TOP><TD WIDTH=43><P>Ymin</P></TD></TR><TR VALIGN=TOP><TD WIDTH=43><P><BR></P></TD><TD WIDTH=38><P>Xmin</P></TD><TD WIDTH=26><P><BR></P></TD><TD WIDTH=41><P>Xmax</P></TD></TR></TABLE>
 </td>
@@ -406,32 +436,36 @@ ninguno
 <hr/>
 <b>Obligatorio para GetMap:</b><br>
 		<div id="capasCheck"></div><br>
-		<input type="text" id="capasSel" name="capasSel"><label for "capasSel">Capas seleccionadas</label><br>
+		<input type="hidden" id="capasSel" name="capasSel"><label for "capasSel">Capas seleccionadas</label><br>
 		<input type="button" name="Submit" value="Ver capas" onClick="listLayers();"><br>
 		<input type="button" name="Submit" value="Add capas" onClick="addLayers();"><br>
 Referencia espacial (srs): 
 <select name="srs" id="srs">
-   <option value="EPSG:23029">UTM ED50 HUSO 29</option>
+   <!--<option value="EPSG:23029">UTM ED50 HUSO 29</option>
    <option value="EPSG:23030" selected>UTM ED50 HUSO 30</option> 
-   <option value="EPSG:23031">UTM ED50 HUSO 31</option>
+   <option value="EPSG:23031">UTM ED50 HUSO 31</option>-->
    <option value="EPSG:25829">UTM ETRS89 HUSO 29</option>
-   <option value="EPSG:25830">UTM ETRS89 HUSO 30</option> 
+   <option value="EPSG:25830" selected>UTM ETRS89 HUSO 30</option> 
    <option value="EPSG:25831">UTM ETRS89 HUSO 31</option>
    <option value="EPSG:4326">GEOGRAFICA WGS84</option> 
    <option value="EPSG:900913">GOOGLE MERCATOR</option>
 </select><br/>
-Capas (layers) <input type="text" name="layers"  id="layers" value="Fotografia,Edificios" /><br/>
+Capas (layers) <input type="text" name="layers"  id="layers" value="" /><br/>
+Calcular límites espaciales (BBOX):<br>
+        <input type="button" value="ver coordenadas geográficas WGS 84" onclick="getextent4326();" /><br /> 
+        <input type="button" value="ver coordenadas proyectadas Google Mercator" onclick="getextent900913();" /><br /> 
+        <input type="button" value="ver coordenadas UTM ETRS89" onclick="getextent25830();" /><br />
 Límites espaciales (bbox): <input type="text" name="bbox"  id="bbox" size="80" value="" /><br/>
 Ancho (width) <input type="text" name="width"  id="width" value="600" /><br/>
 Alto (height) <input type="text" name="height"  id="height" />
-<input type='button' onclick='rellenaHeight()' value='Calcula ancho'/>
+<input type='button' onclick='rellenaHeight()' value='Calcula alto'/>
 <br/>
 
 <!-- Ancho (width) <input type="text" name="width"  id="width" value="400" /><br/>
  onChange='rellenaResource()' -->
 Formato imagen (format):
 <select name="format" id="format">
-   <option value="image/png">PNG</option>
+   <option value="image/png" selected>PNG</option>
    <option value="image/gif">GIF</option>
    <option value="image/jpeg">JPEG</option>
  </select><br/>
@@ -441,18 +475,18 @@ Formato imagen (format):
  <hr/>
  <b>Obligatorio para GetFeatureInfo:</b>
  <i>Además de srs,bbox,width,height</i><br/>
- Capas a consultar (query_layers): <input type="text" name="query_layers"  id="query_layers" value="PB,P1" /><br/>
- Capas a visualizar (layer): <input type="text" name="layersInfo"  id="layersInfo" value="Edificios,PB" /><br/>
+ Capas a consultar (query_layers): <input type="text" name="query_layers"  id="query_layers" value="" /><br/>
+ Capas a visualizar (layer): <input type="text" name="layersInfo"  id="layersInfo" value="" /><br/>
  Formato de salida (info_format): <select name="info_format" id="info_format">
    <option value="text/plain">Texto plano</option>
    <option value="gml">Documento GML</option>
    <option value="text/html">Documento HTML</option>
  </select><br/> 
- Coordenada X en píxeles de la imagen (x): <input type="text" name="imgx"  id="imgx" size="2" value="156" /><br/>
- Coordenada Y en píxeles de la imagen (y): <input type="text" name="imgy"  id="imgy" size="2" value="190" /><br/>
+ Coordenada X en píxeles de la imagen (x): <input type="text" name="imgx"  id="imgx" size="2" value="" /><br/>
+ Coordenada Y en píxeles de la imagen (y): <input type="text" name="imgy"  id="imgy" size="2" value="" /><br/>
  <hr/>
  <b>Obligatorio para GetLegendGraphic:</b><br/>
- Capa para ver leyenda (layer): <input type="text" name="layerLey"  id="layerLey" size="2" value="PB" /><br/>
+ Capa para ver leyenda (layer): <input type="text" name="layerLey"  id="layerLey" size="2" value="" /><br/>
  Formato de la imagen (format): 
  <select name="formatLey" id="formatLey">
    <option value="image/png">PNG</option>
@@ -478,3 +512,4 @@ Formato imagen (format):
 
 </body> 
 </html> 
+
