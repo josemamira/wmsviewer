@@ -275,7 +275,7 @@ function changeText(){
 		if (document.getElementById('layers').value === '' ) { alert('No hay capas (LAYERS)'); }
 		if (document.getElementById('height').value === '' ) { alert('No hay alto de imagen (HEIGHT). Calcúla alto'); }
 				
-		url= document.getElementById('urlText').innerHTML = OnlineResourceValue+operador+"request="+requestValue+service+version+query_layers+bbox+height+width+formatValue+layersInfo+imgx+imgy+info_formatValue;
+		url= document.getElementById('urlText').innerHTML = OnlineResourceValue+operador+"request="+requestValue+service+version+query_layers+bbox+height+width+formatValue+layersInfo+imgx+imgy+info_formatValue+'&feature_count=50';
 		//url= document.getElementById('urlText').innerHTML = OnlineResourceValue+operador+"request="+requestValue+service+version+srsValue+query_layers+bbox+height+width+formatValue+layersInfo+imgx+imgy+info_format+info_formatValue;
 		document.getElementById('urlText').innerHTML = "<a href='"+ url + "' target='_blank'>"+ url + "</a>";
 	} else {
